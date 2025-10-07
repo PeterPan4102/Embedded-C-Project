@@ -114,4 +114,24 @@ Không có kiến trúc nào là hoàn hảo giữa **RISC** và **CISC**. 
 - **RISC** → cho **ứng dụng nhẹ**, **tiết kiệm năng lượng**, **thiết bị nhúng**  
 - **CISC** → cho **tác vụ phức tạp**, **hiệu năng cao**, **máy tính truyền thống**
 
+### Bảng so sánh RISC với CISC (tóm tắt)
+| **Tiêu chí**                            | **RISC (Reduced Instruction Set Computer)**               | **CISC (Complex Instruction Set Computer)**         |
+| --------------------------------------- | --------------------------------------------------------- | --------------------------------------------------- |
+| **Tập lệnh (Instruction Set)**          | Ít lệnh, đơn giản, độ dài cố định                         | Nhiều lệnh, phức tạp, độ dài thay đổi               |
+| **Thực thi lệnh**                       | Mỗi lệnh thường hoàn thành trong **1 chu kỳ xung nhịp**   | Một lệnh có thể cần **nhiều chu kỳ xung nhịp**      |
+| **Độ phức tạp phần cứng**               | Đơn giản, dễ thiết kế                                     | Phức tạp hơn, cần mạch giải mã lớn                  |
+| **Tốc độ xử lý**                        | Nhanh hơn cho các tác vụ đơn giản                         | Chậm hơn cho các tác vụ cơ bản                      |
+| **Tiêu thụ điện năng**                  | Thấp hơn → tiết kiệm năng lượng                           | Cao hơn → tốn điện hơn                              |
+| **Kích thước chip**                     | Nhỏ hơn                                                   | Lớn hơn                                             |
+| **Bộ nhớ sử dụng**                      | Tốn bộ nhớ hơn (do cần nhiều lệnh)                        | Tiết kiệm bộ nhớ hơn (do lệnh phức tạp hơn)         |
+| **Chi phí phát triển**                  | Cao hơn, khó thiết kế hơn                                 | Dễ thiết kế hơn, chi phí thấp hơn                   |
+| **Khả năng thực thi tác vụ phức tạp**   | Giới hạn hơn (do lệnh đơn giản)                           | Tốt hơn cho các tác vụ phức tạp                     |
+| **Khả năng pipeline (xử lý song song)** | Hiệu quả cao nhờ lệnh ngắn và đều                         | Hạn chế do lệnh dài và không đồng nhất              |
+| **Ví dụ kiến trúc**                     | ARM, MIPS, RISC-V                                         | x86 (Intel, AMD)                                    |
+| **Ví dụ bộ xử lý**                      | Apple M-series, Qualcomm Snapdragon, SiFive RISC-V        | Intel Core i7, AMD Ryzen                            |
+| **Thiết bị ứng dụng**                   | Smartphone, tablet, smartwatch, IoT, thiết bị nhúng       | PC, laptop, máy chủ, hệ thống đồ họa và khoa học    |
+| **Hiệu quả trong hệ thống nhúng**       | **Rất cao** – nhỏ gọn, tiết kiệm năng lượng             | Thấp – tốn năng lượng và không phù hợp kích thước |
+| **Xu hướng thị trường**                 | Ngày càng phổ biến, đặc biệt với **RISC-V (mã nguồn mở)** | Ổn định, vẫn thống trị mảng máy tính cá nhân        |
+| **Tương thích phần mềm cũ**             | Hạn chế hơn                                               | Rất tốt (do lịch sử phát triển lâu dài)             |
+| **Tổng kết**                            | Phù hợp cho **thiết bị nhúng, IoT, AI edge**              | Phù hợp cho **máy tính, máy chủ, ứng dụng nặng**    |
 
