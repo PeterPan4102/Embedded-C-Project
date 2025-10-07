@@ -1,4 +1,4 @@
-# RISC và CISC & Sự khác biệt giữa chúng
+# Tìm hiểu về RISC và CISC 
 
 ##  RISC & CISC là gì?
 
