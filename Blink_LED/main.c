@@ -14,7 +14,7 @@ int main(void)
     while (1)
     {
         /* Bật LED */
-        PTD->PCOR = (1 << 0);   // ghi 0 để bật LED (tùy board, có thể ngược)
+        PTD->PCOR = (1 << 0);   // ghi 0 để bật LED 
         delay_ms(3000);         // delay 3 giây
 
         /* Tắt LED */
