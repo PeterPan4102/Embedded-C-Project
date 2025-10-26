@@ -3,7 +3,7 @@
  * @author Dung Pham Van (dungpv00@gmail.com)
  * @brief Ví dụ đọc giá trị ADC và điều khiển LED dựa trên mức điện áp đầu vào
  *
- * @version 0.1
+ * @version 1.0
  * @date 2025-10-26
  *
  * @copyright Copyright (c) 2025
