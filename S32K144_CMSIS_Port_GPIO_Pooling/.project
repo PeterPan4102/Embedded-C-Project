@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>S32K144_CMSIS_GPIO_PORT</name>
+	<name>S32K144_CMSIS_Port_GPIO_Pooling</name>
 	<comment></comment>
 	<projects>
 	</projects>
