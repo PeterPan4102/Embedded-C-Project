@@ -1,3 +1,14 @@
+/**
+ * @file Driver_GPIO.h
+ * @author Dung Van Pham (dungpv00@gmail.com)
+ * @brief GPIO Driver header file (CMSIS-Driver style)
+ * @version 0.1
+ * @date 2025-12-20
+ *
+ * @copyright Copyright (c) 2025
+ *
+ */
+
 #ifndef DRIVER_GPIO_H_
 #define DRIVER_GPIO_H_
 
@@ -6,33 +17,44 @@ extern "C"
 {
 #endif
 
+/*==================================================================================================
+* INCLUDES
+==================================================================================================*/
 #include "Driver_Common.h"
 
 
+/*==================================================================================================
+* DEFINES AND MACROS
+==================================================================================================*/
+
 /**
-\brief GPIO Pin
-*/
+ * @brief GPIO Pin type
+ *
+ */
 typedef uint32_t ARM_GPIO_Pin_t;
 
 /**
-\brief GPIO Direction
-*/
+ * @brief GPIO Direction
+ *
+ */
 typedef enum {
   ARM_GPIO_INPUT,                       ///< Input (default)
   ARM_GPIO_OUTPUT                       ///< Output
 } ARM_GPIO_DIRECTION;
 
 /**
-\brief GPIO Output Mode
-*/
+ * @brief GPIO Output Mode
+ *
+ */
 typedef enum {
   ARM_GPIO_PUSH_PULL,                   ///< Push-pull (default)
   ARM_GPIO_OPEN_DRAIN                   ///< Open-drain
 } ARM_GPIO_OUTPUT_MODE;
 
 /**
-\brief GPIO Pull Resistor
-*/
+ * @brief GPIO Pull Resistor
+ *
+ */
 typedef enum {
   ARM_GPIO_PULL_NONE,                   ///< None (default)
   ARM_GPIO_PULL_UP,                     ///< Pull-up
@@ -40,8 +62,9 @@ typedef enum {
 } ARM_GPIO_PULL_RESISTOR;
 
 /**
-\brief GPIO Event Trigger
-*/
+ * @brief GPIO Event Trigger
+ *
+ */
 typedef enum {
   ARM_GPIO_TRIGGER_NONE,                ///< None (default)
   ARM_GPIO_TRIGGER_RISING_EDGE,         ///< Rising-edge
@@ -112,8 +135,9 @@ typedef void (*ARM_GPIO_SignalEvent_t) (ARM_GPIO_Pin_t pin, uint32_t event);  /*
 
 
 /**
-\brief Access structure of the GPIO Driver.
-*/
+ * @brief GPIO Driver structure
+ *
+ */
 typedef struct _ARM_DRIVER_GPIO {
   int32_t  (*Setup)           (ARM_GPIO_Pin_t pin, ARM_GPIO_SignalEvent_t cb_event); ///< Pointer to \ref ARM_GPIO_Setup : Setup GPIO Interface.
   int32_t  (*SetDirection)    (ARM_GPIO_Pin_t pin, ARM_GPIO_DIRECTION direction);    ///< Pointer to \ref ARM_GPIO_SetDirection : Set GPIO Direction.
