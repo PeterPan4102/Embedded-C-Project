@@ -1,0 +1,7 @@
+-c
+-I"C:/Users/ADMIN/workspaceS32DS.3.6.4/S32K144_Demo_Mock_Test/include"
+-x assembler-with-cpp
+-DSTART_FROM_FLASH
+-g3
+-mcpu=cortex-m4
+-specs=rdimon.specs
