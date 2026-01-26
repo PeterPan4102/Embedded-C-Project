@@ -41,10 +41,6 @@
  ******************************************************************************/
 static uint8_t s_update_active = 0U;
 static uint8_t s_seen_data     = 0U;
-static uint8_t s_ac_loaded     = 0U;
-
-/* Track erased sectors inside APP region */
-static uint8_t s_sector_erased[APP_SECTOR_COUNT];
 
 /*******************************************************************************
  * Local functions
@@ -55,54 +51,11 @@ static uint8_t Bootloader_IsAddressInRange(uint32_t addr, uint32_t start, uint32
 
     if ((addr >= start) && (addr < end_exclusive))
     {
-        result = 1U;
+        return 1U;
     }
 
     return result;
 }
-
-static void Bootloader_ResetEraseMap(void)
-{
-    uint32_t i;
-
-    for (i = 0UL; i < (uint32_t)APP_SECTOR_COUNT; i++)
-    {
-        s_sector_erased[i] = 0U;
-    }
-}
-
-static int32_t Bootloader_EnsureSectorErased(uint32_t addr)
-{
-    uint32_t sector_base;
-    uint32_t idx;
-
-    if ((addr < APP_START_ADDR) || (addr >= APP_END_EXCL))
-    {
-        return BL_ERR_RANGE;
-    }
-
-    sector_base = (addr / FLASH_SECTOR_SIZE) * FLASH_SECTOR_SIZE;
-
-    /* Map index is relative to APP_START_ADDR */
-    idx = (sector_base - APP_START_ADDR) / FLASH_SECTOR_SIZE;
-
-    if (idx >= (uint32_t)APP_SECTOR_COUNT)
-    {
-        return BL_ERR_RANGE;
-    }
-
-    if (0U == s_sector_erased[idx])
-    {
-        if (Erase_Sector(sector_base) == 0U)
-        {
-            return BL_ERR_FLASH;
-        }
-        s_sector_erased[idx] = 1U;
-    }
-
-    return BL_OK;
-}
-
 /*******************************************************************************
  * API
  ******************************************************************************/
@@ -295,8 +248,6 @@ static int32_t Bootloader_ProgramFlash(uint32_t address, const uint8_t *data, ui
 
 void Bootloader_HandleRecord(const srec_record_t *record, uint32_t *entry_point)
 {
-    int32_t st;
-
     if ((NULL == record) || (NULL == entry_point))
     {
         return;
@@ -304,73 +255,21 @@ void Bootloader_HandleRecord(const srec_record_t *record, uint32_t *entry_point)
 
     switch (record->type)
     {
-        case '0':
-        {
-            s_update_active = 1U;
-            s_seen_data     = 0U;
-
-            /* Load access code once */
-            if (0U == s_ac_loaded)
-            {
-                Mem_43_INFLS_IPW_LoadAc();
-                s_ac_loaded = 1U;
-            }
-
-            /* New update session => reset erase map */
-            Bootloader_ResetEraseMap();
-
-            return;
-        }
-
         case '1':
         case '2':
         case '3':
         {
-            uint32_t last_addr;
+            s_update_active = 1U;
 
-            if (0U == s_update_active)
-            {
-                break;
-            }
-
-            /* Ensure sector of start address erased */
-            st = Bootloader_EnsureSectorErased(record->address);
-            if (BL_OK != st)
-            {
-                s_update_active = 0U;
-                break;
-            }
-
-            /* If record spans into next sector, ensure end sector erased too */
-            if (record->data_len > 0U)
-            {
-                last_addr = record->address + record->data_len - 1UL;
-
-                /* overflow / range protection */
-                if (last_addr < record->address)
-                {
-                    s_update_active = 0U;
-                    break;
-                }
-
-                st = Bootloader_EnsureSectorErased(last_addr);
-                if (BL_OK != st)
-                {
-                    s_update_active = 0U;
-                    break;
-                }
-            }
-
-            if (BL_OK == Bootloader_ProgramFlash(record->address, record->data, record->data_len))
+            if (BL_OK == Bootloader_ProgramFlash(record->address,
+                                                 record->data,
+                                                 record->data_len))
             {
                 s_seen_data = 1U;
             }
-            else
-            {
-                s_update_active = 0U;
-            }
             break;
         }
+
 
         case '7':
         case '8':
@@ -378,7 +277,6 @@ void Bootloader_HandleRecord(const srec_record_t *record, uint32_t *entry_point)
         {
             if ((1U == s_update_active) && (1U == s_seen_data))
             {
-                *entry_point = record->address;
                 Bootloader_JumpToUserApp(APP_START_ADDR);
             }
             break;

@@ -171,6 +171,10 @@ int main(void)
 	entry_point = 0UL;
 
 	cmd_buffer[0] = '\0';
+	App_SendString("\r\n*** ERASE PROCESSING ***\r\n");
+
+	Mem_43_INFLS_IPW_LoadAc();
+	(void)Erase_Multi_Sector(APP_BASE_ADDR, (APP_END_ADDR - APP_BASE_ADDR)/FTFC_P_FLASH_SECTOR_SIZE);
 
 	App_SendString("\r\n*** UART BOOTLOADER READY TO SENT ***\r\n");
 	App_SendPrompt();
