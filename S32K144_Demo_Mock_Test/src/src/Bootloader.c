@@ -67,7 +67,6 @@ static uint8_t Bootloader_FlashIsOkAfterCmd(void);
  ******************************************************************************/
 static uint8_t  s_update_active = 0U;
 static uint8_t  s_seen_data     = 0U;
-static uint32_t g_entry_point   = 0U;
 
 static phrase_cache_t g_cache;
 static uint8_t        g_cache_inited = 0U;
@@ -173,17 +172,17 @@ static uint8_t Bootloader_FlashIsOkAfterCmd(void)
         ok = 0U;
     }
     /* ACCERR */
-    else if ((0U == (f & 0x20U)) || (0U == (f & 0x40U)))
+    else if ((0U != (f & 0x20U)))
     {
         ok = 0U;
     }
     /* FPVIOL */
-    else if (0U == (f & 0x10U))
+    else if (0U != (f & 0x10U))
     {
         ok = 0U;
     }
     /* MGSTAT0 */
-    else if (0U == (f & 0x01U))
+    else if (0U != (f & 0x01U))
     {
         ok = 0U;
     }

@@ -224,11 +224,6 @@ int main(void)
 						(void)Queue_Srec_Push(&s_srec_queue, cmd_buffer, cmd_index);
 					}
 
-					// /* clear buffer for next line */
-					// for (uint32_t i = 0U; i < cmd_index; i++)
-					// {
-					// 	cmd_buffer[i] = 0U;
-					// }
 					cmd_index = 0U;
 				}
 			}
@@ -274,5 +269,3 @@ int main(void)
 
 	return 0;
 }
-
-

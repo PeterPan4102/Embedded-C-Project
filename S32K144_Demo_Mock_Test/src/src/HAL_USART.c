@@ -131,6 +131,9 @@ int32_t HAL_ARM_USART_Control(uint32_t control, uint32_t arg)
     uint32_t data_bits = 0U;
     uint32_t parity    = 0U;
     uint32_t stop_bits = 0U;
+    uint32_t baudrate  = 0U;
+
+    baudrate = arg;
 
     if (0U == s_uart1_ctx.initialized)
     {
@@ -148,10 +151,29 @@ int32_t HAL_ARM_USART_Control(uint32_t control, uint32_t arg)
         {
             case ARM_USART_MODE_ASYNCHRONOUS:
             {
-                (void)arg;
+                switch(baudrate)
+                {
+                    case 1200U:
+                    case 2400U:
+                    case 4800U:
+                    case 9600U:
+                        /* Supported baud rates */
+                        /* OSR = 15 (16x oversampling), SBR = 52 => 8MHz / (16 * 52) ~ 9615 bps */
+                        IP_LPUART1->BAUD = 0x0F000034UL; //0x0F000034
+                        break;
+                    case 19200U:
+                    case 38400U:
+                    case 57600U:
+                    case 115200U:
+                        /* Supported baud rates */
+                        /* 8MHz, OSR=22 (23x), SBR=3  => ~115942 bps (~+0.644%) */
+                        IP_LPUART1->BAUD = 0x16000003UL; //0x0F00000A
+                        break;
 
-                /* OSR = 15 (16x oversampling), SBR = 52 => 8MHz / (16 * 52) ~ 9615 bps */
-                IP_LPUART1->BAUD = 0x0F000034UL; //0x0F000034
+                    default:
+                        result = ARM_USART_ERROR_BAUDRATE;
+                        break;
+                }
 
                 data_bits = control & ARM_USART_DATA_BITS_Msk;
                 parity    = control & ARM_USART_PARITY_Msk;
@@ -160,15 +182,15 @@ int32_t HAL_ARM_USART_Control(uint32_t control, uint32_t arg)
                 /* Data bits */
                 if (ARM_USART_DATA_BITS_8 == data_bits)
                 {
-                    IP_LPUART1->CTRL &= (uint32_t)~LPUART_CTRL_M_MASK;
+                	IP_LPUART1->CTRL &= (uint32_t)~LPUART_CTRL_M_MASK;
                 }
                 else if (ARM_USART_DATA_BITS_9 == data_bits)
                 {
-                    IP_LPUART1->CTRL |= LPUART_CTRL_M_MASK;
+                	IP_LPUART1->CTRL |= LPUART_CTRL_M_MASK;
                 }
                 else
                 {
-                    result = ARM_DRIVER_ERROR_UNSUPPORTED;
+                	result = ARM_DRIVER_ERROR_UNSUPPORTED;
                 }
 
                 /* Parity */
