@@ -91,6 +91,11 @@ void Boot_PinInit(void)
     Driver_GPIO0.SetPullResistor(BUTTON_1_PIN, ARM_GPIO_PULL_UP);
 }
 
+/**
+ * @brief Check if boot mode is requested by button pin
+ *
+ * @return uint8_t 1: boot mode requested, 0: normal mode
+ */
 uint8_t Bootloader_IsBootModeByPin()
 {
     return (Driver_GPIO0.GetInput(BUTTON_1_PIN));
@@ -219,11 +224,11 @@ int main(void)
 						(void)Queue_Srec_Push(&s_srec_queue, cmd_buffer, cmd_index);
 					}
 
-					/* clear buffer for next line */
-					for (uint32_t i = 0U; i < cmd_index; i++)
-					{
-						cmd_buffer[i] = 0U;
-					}
+					// /* clear buffer for next line */
+					// for (uint32_t i = 0U; i < cmd_index; i++)
+					// {
+					// 	cmd_buffer[i] = 0U;
+					// }
 					cmd_index = 0U;
 				}
 			}

@@ -1,3 +1,13 @@
+/**
+ * @file Bootloader.h
+ * @author Dung Van Pham (dungpv00@gmail.com)
+ * @brief Bootloader interface for S32K144
+ * @version 0.1
+ * @date 2026-01-27
+ *
+ * @copyright Copyright (c) 2026
+ *
+ */
 #ifndef BOOTLOADER_H_
 #define BOOTLOADER_H_
 
@@ -26,7 +36,7 @@ typedef enum
  * API
  ******************************************************************************/
 uint8_t Bootloader_IsUserAppValid(uint32_t app_base_addr);
-void    Bootloader_JumpToUserApp(uint32_t app_base_addr);
+void Bootloader_JumpToUserApp(uint32_t app_base_addr);
 typedef void (*JumpToPtr)(void);
 void Bootloader_HandleRecord(const srec_record_t *record, uint32_t *entry_point);
 

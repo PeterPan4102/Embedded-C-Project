@@ -59,6 +59,7 @@ uint8_t Program_LongWord_8B(uint32_t Addr,uint8_t *Data)
     {
         IP_FTFC->FSTAT = 0x30;
     }
+
     /* Program 4 bytes in a program flash block */
     IP_FTFC->FCCOB[3] = CMD_PROGRAM_LONGWORD;
 

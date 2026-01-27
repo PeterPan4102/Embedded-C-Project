@@ -151,7 +151,7 @@ int32_t HAL_ARM_USART_Control(uint32_t control, uint32_t arg)
                 (void)arg;
 
                 /* OSR = 15 (16x oversampling), SBR = 52 => 8MHz / (16 * 52) ~ 9615 bps */
-                IP_LPUART1->BAUD = 0x0F0000D0UL; //0x0F000034
+                IP_LPUART1->BAUD = 0x0F000034UL; //0x0F000034
 
                 data_bits = control & ARM_USART_DATA_BITS_Msk;
                 parity    = control & ARM_USART_PARITY_Msk;
