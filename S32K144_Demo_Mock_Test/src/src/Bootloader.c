@@ -348,13 +348,13 @@ static int32_t Bootloader_StreamWrite(uint32_t address, const uint8_t *data, uin
     {
         valid = 0U;
     }
-    else if ((app_reset & 0x1UL) == 0UL)
+    else if (0UL == (app_reset & 0x1UL))
     {
         valid = 0U;
     }
-    else if (Bootloader_IsAddressInRange((app_reset & 0xFFFFFFFEUL),
-                                         S32K144_FLASH_START,
-                                         S32K144_FLASH_END_EXCL) == 0U)
+    else if (Bootloader_IsAddressInRange(0U == (app_reset & 0xFFFFFFFEUL),
+                                                S32K144_FLASH_START,
+                                                S32K144_FLASH_END_EXCL))
     {
         valid = 0U;
     }
@@ -407,7 +407,7 @@ void Bootloader_HandleRecord(const srec_record_t *record, uint32_t *entry_point)
 {
     int32_t flush_st = BL_OK;
 
-    if ((record == NULL) || (entry_point == NULL))
+    if ((NULL == record) || (NULL == entry_point))
     {
         return;
     }
@@ -420,7 +420,7 @@ void Bootloader_HandleRecord(const srec_record_t *record, uint32_t *entry_point)
         {
             s_update_active = 1U;
 
-            if (Bootloader_StreamWrite(record->address, record->data, record->data_len) == BL_OK)
+            if (BL_OK == Bootloader_StreamWrite(record->address, record->data, record->data_len))
             {
                 s_seen_data = 1U;
             }
@@ -433,7 +433,7 @@ void Bootloader_HandleRecord(const srec_record_t *record, uint32_t *entry_point)
         {
             flush_st = Bootloader_StreamEnd();
 
-            if ((flush_st == BL_OK) && (Bootloader_IsUserAppValid(APP_START_ADDR) != 0U))
+            if ((BL_OK == flush_st) && (0U != Bootloader_IsUserAppValid(APP_START_ADDR)))
             {
                 Bootloader_JumpToUserApp(APP_START_ADDR);
             }
