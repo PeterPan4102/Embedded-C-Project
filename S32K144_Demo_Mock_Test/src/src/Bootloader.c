@@ -81,7 +81,7 @@ static uint8_t        g_cache_inited = 0U;
  static void PhraseCache_Reset(phrase_cache_t *c)
 {
     uint32_t i;
-    if (c != NULL)
+    if (NULL != c)
     {
         c->base  = 0U;
         c->valid = 0U;
@@ -137,7 +137,7 @@ static uint8_t PhraseCache_IsAlreadyProgrammedSame(uint32_t base, const uint8_t 
     cur[6] = (uint8_t)(w1 >> 16);
     cur[7] = (uint8_t)(w1 >> 24);
 
-    if (buf8 != NULL)
+    if (NULL != buf8)
     {
         for (uint32_t i = 0U; i < PHRASE_SIZE; i++)
         {
@@ -210,7 +210,7 @@ static int32_t PhraseCache_Flush(phrase_cache_t *c)
     }
     else
     {
-        if (PhraseCache_IsAlreadyProgrammedSame(c->base, c->data) != 0U)
+        if (0U != PhraseCache_IsAlreadyProgrammedSame(c->base, c->data))
         {
             c->dirty = 0U;
             status = BL_OK;
@@ -287,7 +287,7 @@ static int32_t Bootloader_StreamWrite(uint32_t address, const uint8_t *data, uin
         }
         else
         {
-            if (g_cache_inited == 0U)
+            if (0U == g_cache_inited)
             {
                 Bootloader_StreamBegin();
             }
@@ -298,7 +298,7 @@ static int32_t Bootloader_StreamWrite(uint32_t address, const uint8_t *data, uin
                 uint32_t base = a & ~(PHRASE_SIZE - 1UL);
                 uint32_t off  = a - base;
 
-                if ((g_cache.valid != 0U) && (g_cache.base != base))
+                if ((0U != g_cache.valid) && (base != g_cache.base))
                 {
                     status = PhraseCache_Flush(&g_cache);
                     if (status != BL_OK)
@@ -308,7 +308,7 @@ static int32_t Bootloader_StreamWrite(uint32_t address, const uint8_t *data, uin
                     PhraseCache_Reset(&g_cache);
                 }
 
-                if (g_cache.valid == 0U)
+                if (0U == g_cache.valid)
                 {
                     g_cache.valid = 1U;
                     g_cache.base  = base;
