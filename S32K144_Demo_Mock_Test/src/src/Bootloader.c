@@ -65,9 +65,6 @@ static uint8_t Bootloader_FlashIsOkAfterCmd(void);
 /*******************************************************************************
  * Variables
  ******************************************************************************/
-static uint8_t  s_update_active = 0U;
-static uint8_t  s_seen_data     = 0U;
-
 static phrase_cache_t g_cache;
 static uint8_t        g_cache_inited = 0U;
 
@@ -87,10 +84,7 @@ static uint8_t        g_cache_inited = 0U;
         c->valid = 0U;
         c->dirty = 0U;
 
-        for (i = 0U; i < PHRASE_SIZE; i++)
-        {
-            c->data[i] = 0xFFU;
-        }
+        memset(c->data, 0xFF, PHRASE_SIZE);
     }
 }
 
@@ -157,44 +151,6 @@ static uint8_t PhraseCache_IsAlreadyProgrammedSame(uint32_t base, const uint8_t 
 }
 
 /**
- * @brief Check flash status register after command
- *
- * @return uint8_t 1: ok, 0: error
- */
-static uint8_t Bootloader_FlashIsOkAfterCmd(void)
-{
-    uint8_t ok = 1U;
-    uint8_t f  = IP_FTFC->FSTAT;
-
-    /* CCIF must be set */
-    if (0U == (f & 0x80U))
-    {
-        ok = 0U;
-    }
-    /* ACCERR */
-    else if ((0U != (f & 0x20U)))
-    {
-        ok = 0U;
-    }
-    /* FPVIOL */
-    else if (0U != (f & 0x10U))
-    {
-        ok = 0U;
-    }
-    /* MGSTAT0 */
-    else if (0U != (f & 0x01U))
-    {
-        ok = 0U;
-    }
-    else
-    {
-        /* ok */
-    }
-
-    return ok;
-}
-
-/**
  * @brief Flush phrase cache to flash
  *
  * @param c phrase cache to flush
@@ -206,7 +162,7 @@ static int32_t PhraseCache_Flush(phrase_cache_t *c)
 
     if ((NULL == c) || (0U == c->valid) || (0U == c->dirty))
     {
-        status = BL_OK;
+        status = BL_ERR_FLASH;
     }
     else
     {
@@ -218,16 +174,8 @@ static int32_t PhraseCache_Flush(phrase_cache_t *c)
         else
         {
             (void)Program_LongWord_8B(c->base, c->data);
-
-            if (0U == Bootloader_FlashIsOkAfterCmd())
-            {
-                status = BL_ERR_FLASH;
-            }
-            else
-            {
-                c->dirty = 0U;
-                status = BL_OK;
-            }
+            c->dirty = 0U;
+            status = BL_OK;
         }
     }
 
@@ -249,15 +197,7 @@ static void Bootloader_StreamBegin(void)
 static int32_t Bootloader_StreamEnd(void)
 {
     int32_t status = BL_OK;
-
-    if (0U == g_cache_inited)
-    {
-        status = BL_OK;
-    }
-    else
-    {
-        status = PhraseCache_Flush(&g_cache);
-    }
+    status = PhraseCache_Flush(&g_cache);
 
     return status;
 }
@@ -295,6 +235,8 @@ static int32_t Bootloader_StreamWrite(uint32_t address, const uint8_t *data, uin
             for (uint32_t i = 0U; i < len; i++)
             {
                 uint32_t a    = address + i;
+
+                /* Align address down to phrase boundary */
                 uint32_t base = a & ~(PHRASE_SIZE - 1UL);
                 uint32_t off  = a - base;
 
@@ -418,12 +360,7 @@ void Bootloader_HandleRecord(const srec_record_t *record, uint32_t *entry_point)
         case '2':
         case '3':
         {
-            s_update_active = 1U;
-
-            if (BL_OK == Bootloader_StreamWrite(record->address, record->data, record->data_len))
-            {
-                s_seen_data = 1U;
-            }
+            Bootloader_StreamWrite(record->address, record->data, record->data_len);
             break;
         }
 
