@@ -152,7 +152,7 @@ int main(void)
 				ARM_USART_DATA_BITS_8       |
 				ARM_USART_PARITY_NONE       |
 				ARM_USART_STOP_BITS_1,
-				2400U);
+				9600U);
 	}
 
 	if (ARM_DRIVER_OK == status)
