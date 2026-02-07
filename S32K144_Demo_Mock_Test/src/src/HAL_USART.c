@@ -13,7 +13,7 @@
 * INCLUDES
 ==================================================================================================*/
 #include "incl/HAL_USART.h"
-
+#include "incl/NVIC.h"
 #include "S32K144.h"
 
 /*==================================================================================================
@@ -21,6 +21,7 @@
 ==================================================================================================*/
 #define CLEAR_LPUART_STAT    (0xFFFFFFFFUL)
 #define HAL_UART_RX_TIMEOUT_LOOP   (1000000U)
+#define LPUART1_IRQ_PRIORITY        (5U)  /* Priority level: 0..15 (implemented in MSBs) */
 
 /*==================================================================================================
 * VARIABLES
@@ -31,9 +32,97 @@ static volatile uint32_t       s_usartTxCount   = 0U;
 static volatile uint32_t       s_usartRxCount   = 0U;
 static ARM_USART_STATUS        s_usartStatus;
 
+static const uint8_t *s_txBuffer;
+static uint32_t s_txLen;
+static uint32_t s_txPos;
+
+static uint8_t *s_rxBuffer;
+static uint32_t s_rxLen;
+static uint32_t s_rxPos;
+
 /*==================================================================================================
-* FUNCTIONS
+* API FUNCTIONS
 ==================================================================================================*/
+void LPUART1_RxTx_IRQHandler(void)
+{
+    uint32_t status = IP_LPUART1->STAT;
+
+    /* Handle Tx interrupt */
+    if((status & LPUART_STAT_TDRE_MASK) && (IP_LPUART1->CTRL & LPUART_CTRL_TIE_MASK))
+    {
+        if(0U != s_usartStatus.tx_busy)
+        {
+            if(s_txPos < s_txLen)
+            {
+                IP_LPUART1->DATA = s_txBuffer[s_txPos];
+                s_txPos++;
+                s_usartTxCount ++;
+            }
+            else
+            {
+                IP_LPUART1->CTRL &= (uint32_t)~LPUART_CTRL_TIE_MASK;
+                s_usartStatus.tx_busy = 0U;
+                 if (0U != s_uart1_ctx.cb_event)
+                 {
+                     s_uart1_ctx.cb_event(ARM_USART_EVENT_SEND_COMPLETE);
+                 }
+            }
+        }
+        else
+        {
+            /* Should not be here */
+            IP_LPUART1->CTRL &= (uint32_t)~LPUART_CTRL_TIE_MASK;
+        }
+    }
+
+
+    /* Handle Rx interrupt */
+    if(0U != (status & LPUART_STAT_RDRF_MASK))
+    {
+        uint8_t c = (uint8_t)(IP_LPUART1->DATA & 0xFFU);
+
+        if (0U != s_usartStatus.rx_busy)
+        {
+            s_rxBuffer[s_rxPos] = c;
+            s_rxPos++;
+            s_usartRxCount++;
+
+            if(s_rxPos >= s_rxLen)
+            {
+                s_usartStatus.rx_busy = 0U;
+                if (0U != s_uart1_ctx.cb_event)
+                {
+                    s_uart1_ctx.cb_event(ARM_USART_EVENT_RECEIVE_COMPLETE);
+                }
+            }
+            else
+            {
+                /* Continue receiving */
+            }
+        }
+        else
+        {
+            /* Discard data if not in receiving state */
+        }
+    }
+}
+
+void LPUART1_IrqEnable(void)
+{
+    uint32_t irqn;
+
+    irqn = (uint32_t) LPUART1_RxTx_IRQn;
+
+    /* Clear pending */
+    MY_NVIC->ICPR[irqn / 32U] = (1UL << (irqn % 32U));
+
+    /* Enable */
+    MY_NVIC->ISER[irqn / 32U] = (1UL << (irqn % 32U));
+
+    /* Priority: shift into MSBs */
+    MY_NVIC->IP[irqn] = (uint8_t)((uint32_t)LPUART1_IRQ_PRIORITY << (8U-__NVIC_PRIO_BITS));
+}
+
 /**
  * @brief Initialize USART driver
  *
@@ -162,8 +251,17 @@ int32_t HAL_ARM_USART_Control(uint32_t control, uint32_t arg)
                         IP_LPUART1->BAUD = 0x0F000034UL; //0x0F000034
                         break;
                     case 19200U:
+                        /* 8MHz / (16 * 26) ≈ 19230 */
+                        IP_LPUART1->BAUD = 0x0F00001AUL; /* OSR=15, SBR=26 */
+                        break;
                     case 38400U:
+                        /* 8MHz / (16 * 13) ≈ 38461 */
+                        IP_LPUART1->BAUD = 0x0F00000DUL; /* OSR=15, SBR=13 */
+                        break;
                     case 57600U:
+                        /* 8MHz / (16 * 9) ≈ 55555 (−3.5%) */
+                        IP_LPUART1->BAUD = 0x0F000009UL; /* OSR=15, SBR=9 */
+                        break;
                     case 115200U:
                         /* Supported baud rates */
                         /* 8MHz, OSR=22 (23x), SBR=3  => ~115942 bps (~+0.644%) */
@@ -252,6 +350,7 @@ int32_t HAL_ARM_USART_Control(uint32_t control, uint32_t arg)
                 if (0U != arg)
                 {
                     IP_LPUART1->CTRL |= LPUART_CTRL_RE_MASK;
+                    IP_LPUART1->CTRL |= LPUART_CTRL_RIE_MASK;
                 }
                 else
                 {
@@ -323,6 +422,8 @@ int32_t HAL_ARM_UART_PowerControl(HAL_UART_PowerState_t power_state)
         {
             IP_PCC->PCCn[PCC_LPUART1_INDEX] |= PCC_PCCn_CGC_MASK;
 
+            LPUART1_IrqEnable();
+
             s_uartPowerState = HAL_UART_POWER_FULL;
         }
         break;
@@ -337,6 +438,7 @@ int32_t HAL_ARM_UART_PowerControl(HAL_UART_PowerState_t power_state)
     return result;
 }
 
+
 /**
  * @brief Send data via USART
  *
@@ -347,7 +449,6 @@ int32_t HAL_ARM_UART_PowerControl(HAL_UART_PowerState_t power_state)
 int32_t HAL_ARM_USART_Send(const uint8_t *data, uint32_t num)
 {
     int32_t  result = ARM_DRIVER_OK;
-    uint32_t i      = 0U;
 
     if ((NULL == data) || (0U == num))
     {
@@ -367,21 +468,19 @@ int32_t HAL_ARM_USART_Send(const uint8_t *data, uint32_t num)
     }
     else
     {
+        s_txBuffer            = data;
+        s_txLen               = num;
+        s_txPos               = 0U;
         s_usartTxCount        = 0U;
         s_usartStatus.tx_busy = 1U;
 
-        for (i = 0U; i < num; i++)
+        if (0U != (IP_LPUART1->STAT & LPUART_STAT_TDRE_MASK))
         {
-            while ((IP_LPUART1->STAT & LPUART_STAT_TDRE_MASK) == 0U)
-            {
-                /* busy wait */
-            }
-
-            IP_LPUART1->DATA = (uint32_t)data[i];
-            s_usartTxCount++;
+            IP_LPUART1->DATA = s_txBuffer[s_txPos];
+            s_txPos++;
         }
 
-        s_usartStatus.tx_busy = 0U;
+        IP_LPUART1->CTRL |= LPUART_CTRL_TIE_MASK;
     }
 
     return result;
@@ -397,8 +496,6 @@ int32_t HAL_ARM_USART_Send(const uint8_t *data, uint32_t num)
 int32_t HAL_ARM_USART_Receive(uint8_t *data, uint32_t num)
 {
     int32_t  result      = ARM_DRIVER_OK;
-    uint32_t i           = 0U;
-    uint32_t timeout_cnt = 0U;
 
     if ((NULL == data) || (0U == num))
     {
@@ -418,44 +515,13 @@ int32_t HAL_ARM_USART_Receive(uint8_t *data, uint32_t num)
     }
     else
     {
+        s_rxBuffer            = data;
+        s_rxLen               = num;
+        s_rxPos               = 0U;
         s_usartRxCount        = 0U;
         s_usartStatus.rx_busy = 1U;
 
-        for (i = 0U; i < num; i++)
-        {
-            timeout_cnt = 0U;
-
-            /* Wait for receive data ready */
-            while ((IP_LPUART1->STAT & LPUART_STAT_RDRF_MASK) == 0U)
-            {
-                /* Check overrun error */
-                if ((IP_LPUART1->STAT & LPUART_STAT_OR_MASK) != 0U)
-                {
-                    /* Clear OR flag by writing 1 */
-                    IP_LPUART1->STAT |= LPUART_STAT_OR_MASK;
-                    result = ARM_DRIVER_ERROR;
-                    break;
-                }
-
-                timeout_cnt++;
-                if (timeout_cnt >= HAL_UART_RX_TIMEOUT_LOOP)
-                {
-                    result = ARM_DRIVER_ERROR_TIMEOUT;
-                    break;
-                }
-            }
-
-            if (ARM_DRIVER_OK != result)
-            {
-                break;
-            }
-
-            /* Read received data (clears RDRF) */
-            data[i] = (uint8_t)IP_LPUART1->DATA;
-            s_usartRxCount++;
-        }
-
-        s_usartStatus.rx_busy = 0U;
+        IP_LPUART1->CTRL |= LPUART_CTRL_RIE_MASK;
     }
 
     return result;

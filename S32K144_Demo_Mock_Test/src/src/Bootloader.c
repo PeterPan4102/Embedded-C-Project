@@ -12,7 +12,9 @@
 #include "S32K144.h"
 #include <stdint.h>
 #include <stddef.h>
-
+#include <string.h>
+#include "incl/app.h"
+#include "incl/Driver_USART.h"
 #include "incl/FLASH.h"
 #include "incl/NVIC.h"
 #include "incl/srec.h"
@@ -60,7 +62,6 @@ static int32_t Bootloader_StreamWrite(uint32_t address, const uint8_t *data, uin
 
 static uint8_t Bootloader_IsAddressInRange(uint32_t addr, uint32_t start, uint32_t end_exclusive);
 static uint8_t PhraseCache_IsAlreadyProgrammedSame(uint32_t base, const uint8_t *buf8);
-static uint8_t Bootloader_FlashIsOkAfterCmd(void);
 
 /*******************************************************************************
  * Variables
@@ -77,7 +78,6 @@ static uint8_t        g_cache_inited = 0U;
  */
  static void PhraseCache_Reset(phrase_cache_t *c)
 {
-    uint32_t i;
     if (NULL != c)
     {
         c->base  = 0U;
@@ -174,6 +174,7 @@ static int32_t PhraseCache_Flush(phrase_cache_t *c)
         else
         {
             (void)Program_LongWord_8B(c->base, c->data);
+
             c->dirty = 0U;
             status = BL_OK;
         }
@@ -294,7 +295,7 @@ static int32_t Bootloader_StreamWrite(uint32_t address, const uint8_t *data, uin
     {
         valid = 0U;
     }
-    else if (Bootloader_IsAddressInRange(0U == (app_reset & 0xFFFFFFFEUL),
+    else if (0 == Bootloader_IsAddressInRange(app_reset & 0xFFFFFFFEUL,
                                                 S32K144_FLASH_START,
                                                 S32K144_FLASH_END_EXCL))
     {
@@ -317,6 +318,8 @@ void Bootloader_JumpToUserApp(uint32_t app_base_addr)
     uint32_t  app_msp;
     uint32_t  app_reset;
     JumpToPtr JumpTo;
+
+    App_SendString("\r\n*** JUMPED TO USER APP ***\r\n");
 
     app_msp   = *((uint32_t *)(app_base_addr + 0UL));
     app_reset = *((uint32_t *)(app_base_addr + 4UL));

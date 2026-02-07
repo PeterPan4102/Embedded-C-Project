@@ -16,14 +16,12 @@
  ===========================================================================================*/
 #include <stdint.h>
 
+extern volatile uint32_t        usart_events;
+
 /*===========================================================================================
  *FUNCTION PROTOTYPES
  ===========================================================================================*/
-/**
- * @brief Initialize LEDs
- *
- */
-void App_InitLeds(void);
+void USART1_SignalEvent(uint32_t event);
 
 /**
  * @brief Send a string via UART
@@ -32,18 +30,5 @@ void App_InitLeds(void);
  */
 void App_SendString(const char *str);
 
-/**
- * @brief Send command prompt via UART
- *
- */
-void App_SendPrompt(void);
-
-/**
- * @brief Process a command received via UART
- *
- * @param cmd Pointer to command buffer
- * @param cmd_len Length of the command
- */
-void App_ProcessCommand(const uint8_t *cmd, uint32_t cmd_len);
 
 #endif /* APP_H_ */

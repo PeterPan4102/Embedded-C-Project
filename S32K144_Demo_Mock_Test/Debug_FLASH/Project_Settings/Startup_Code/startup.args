@@ -1,5 +1,5 @@
 -DCPU_S32K144HFT0VLLT
--I"C:/Users/ADMIN/workspaceS32DS.3.6.4/S32K144_Demo_Mock_Test/include"
+-I"C:/Users/ADMIN/workspaceS32DS.3.6.4/S32K144_Demo_Mock_Test_checkelf/include"
 -O0
 -g3
 -Wall
@@ -8,4 +8,5 @@
 -ffunction-sections
 -fdata-sections
 -mcpu=cortex-m4
+-specs=nano.specs
 -specs=rdimon.specs

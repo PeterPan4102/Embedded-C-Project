@@ -20,26 +20,6 @@
  * LOCAL FUNCTIONS
  =============================================================================*/
 
- /**
-  * @brief Check if character is a valid hexadecimal character
-  *
-  * @param c Character to check
-  * @return uint8_t 1 if valid hex character, 0 otherwise
-  */
-static uint8_t Srec_IsHexChar(uint8_t c)
-{
-    uint8_t result = 0U;
-
-    if (((c >= '0') && (c <= '9')) ||
-        ((c >= 'A') && (c <= 'F')) ||
-        ((c >= 'a') && (c <= 'f')))
-    {
-        result = 1U;
-    }
-
-    return result;
-}
-
 /**
  * @brief Convert a hexadecimal character to its numerical value
  *

@@ -15,7 +15,7 @@
 #include "incl/app.h"
 
 #include <stdint.h>
-
+#include <string.h>
 #include "incl/Driver_GPIO.h"
 #include "incl/Driver_USART.h"
 
@@ -38,21 +38,20 @@ extern ARM_DRIVER_GPIO  Driver_GPIO0;
 extern ARM_DRIVER_USART Driver_USART0;
 
 /*=============================================================================
- * VARIABLES
- =============================================================================*/
-
-static uint8_t g_redLedOn   = 0U;
-static uint8_t g_greenLedOn = 0U;
-static uint8_t g_blueLedOn  = 0U;
-
-/*=============================================================================
  * FUNCTION PROTOTYPES
  =============================================================================*/
+volatile uint32_t usart_events = 0U;
 
 
 /*=============================================================================
  * FUNCTIONS
  =============================================================================*/
+
+void USART1_SignalEvent(uint32_t event)
+{
+	usart_events |= event;
+}
+
 /**
  * @brief Send a string via USART
  *
@@ -68,21 +67,18 @@ void App_SendString(const char *str)
     len    = (uint32_t)strlen(str);
     status = ARM_DRIVER_OK;
 
-    if (len > 0U)
+        if (len > 0U)
+        {
+            status = usart->Send(str, len);
+        }
+
+    while(0U == (usart_events & ARM_USART_EVENT_SEND_COMPLETE))
     {
-        status = usart->Send(str, len);
+        /* Wait until send is complete */
     }
 
+    usart_events &= ~ARM_USART_EVENT_SEND_COMPLETE;
     (void)status;
-}
-
-/**
- * @brief Send command prompt via USART
- *
- */
-void App_SendPrompt(void)
-{
-    App_SendString("\r\n> ");
 }
 
 
