@@ -113,7 +113,6 @@ static void Boot_ProcessOneQueuedLine(Queue_Srec_t *q, srec_record_t *r, uint32_
 
     if (QUEUE_STATUS_OK == Queue_Srec_Pop(q, line, QUEUE_MAX_LINE_LENGTH, &line_len))
     {
-        /* Nếu parser của bạn cần C-string thì đảm bảo '\0' (an toàn) */
         if (line_len < QUEUE_MAX_LINE_LENGTH)
         {
             line[line_len] = '\0';
